@@ -71,6 +71,8 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task<IAudioSource> StopAsync()
 	{
+		cancelDetectSilenceTokenSource?.Cancel();
+
 		if (recorder is null ||
 			destinationFilePath is null ||
 			finishedRecordingCompletionSource is null)

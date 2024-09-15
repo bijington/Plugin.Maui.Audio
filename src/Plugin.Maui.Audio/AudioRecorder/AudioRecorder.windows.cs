@@ -154,6 +154,8 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task<IAudioSource> StopAsync()
 	{
+		cancelDetectSilenceTokenSource?.Cancel();
+
 		if (mediaCapture == null)
 		{
 			throw new InvalidOperationException("No recording in progress");

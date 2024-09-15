@@ -23,7 +23,7 @@ partial class AudioRecorder : IAudioRecorder
 	byte[]? audioData;
     byte[]? audioDataChunk;
 
-    public AudioRecorder(AudioRecorderOptions options)
+	public AudioRecorder(AudioRecorderOptions options)
 	{
 		var packageManager = Android.App.Application.Context.PackageManager;
 
@@ -34,7 +34,6 @@ partial class AudioRecorder : IAudioRecorder
 	public Task StartAsync(AudioRecordingOptions options) => StartAsync(GetTempFilePath(), options);
 	public Task StartAsync() => StartAsync(GetTempFilePath(), DefaultAudioRecordingOptions.DefaultOptions);
 	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
-
 
 	public Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
@@ -96,6 +95,8 @@ partial class AudioRecorder : IAudioRecorder
 
 	public Task<IAudioSource> StopAsync()
 	{
+		cancelDetectSilenceTokenSource?.Cancel();
+
 		if (audioRecord?.RecordingState == RecordState.Recording)
 		{
 			audioRecord?.Stop();

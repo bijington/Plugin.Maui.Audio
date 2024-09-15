@@ -49,6 +49,8 @@ public interface IAudioRecorder
 	///</Summary>
 	Task<IAudioSource> StopAsync();
 
+	Task<IAudioSource> StopAsync(SilenceDetectionParameters parameters);
+
 	/// <Summary>
 	/// Detects silence that persists for a <paramref name="silenceDuration"/> ms period of time.
 	/// The silence is when audio level is beyond <paramref name="silenceThreshold"/> multiplied by lowest detected audio level.

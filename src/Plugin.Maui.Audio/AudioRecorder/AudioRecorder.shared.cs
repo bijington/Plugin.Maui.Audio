@@ -4,12 +4,35 @@ namespace Plugin.Maui.Audio;
 
 partial class AudioRecorder
 {
+	CancellationTokenSource? cancelDetectSilenceTokenSource;
+
 	bool readingsComplete;
 	double noiseLevel;
 	DateTime firstNoiseDetectedTime;
 	DateTime lastSoundDetectedTime;
 
 	public bool SoundDetected { get; private set; }
+
+	public async Task<IAudioSource> StopAsync(SilenceDetectionParameters parameters)
+	{
+		cancelDetectSilenceTokenSource = new();
+
+		try
+		{
+			await DetectSilenceAsync(parameters.SilenceThreshold, parameters.SilenceDuration, cancelDetectSilenceTokenSource.Token);
+			return await StopAsync();
+		}
+		catch (OperationCanceledException)
+		{
+#if ANDROID || WINDOWS
+			return audioFilePath is not null ? new FileAudioSource(audioFilePath) : new EmptyAudioSource();
+#elif MACCATALYST || IOS
+			return destinationFilePath is not null ? new FileAudioSource(destinationFilePath) : new EmptyAudioSource();
+#else
+			return new EmptyAudioSource();
+#endif
+		}
+	}
 
 	public async Task DetectSilenceAsync(double silenceThreshold, int silenceDuration, CancellationToken cancellationToken)
 	{
@@ -146,4 +169,15 @@ partial class AudioRecorder
 
 		return sum > 0;
 	}
+}
+
+public static class When
+{
+	public static SilenceDetectionParameters SilenceIsDetected(double thresholdOf, int forAtLeast) => new(thresholdOf, forAtLeast);
+}
+
+public class SilenceDetectionParameters(double silenceTreshold, int silenceDuration)
+{
+	public double SilenceThreshold { get; } = silenceTreshold;
+	public int SilenceDuration { get; } = silenceDuration;
 }

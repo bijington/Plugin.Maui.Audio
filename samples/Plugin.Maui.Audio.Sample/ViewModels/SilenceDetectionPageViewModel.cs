@@ -80,7 +80,8 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 		else
 		{
-			StopRecording();
+			audioSource = await StopRecordingAsync();
+			CheckIfAnySoundRecorded();
 		}
 	}
 
@@ -94,51 +95,20 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 			return;
 		}
 
-		await RecordUntilSilenceDetectedAsync();
-		StopRecording();
-		audioSource = await GetRecordingAsync();
+		await audioRecorder.StartAsync();
+		audioSource = await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, SilenceDuration));
+		CheckIfAnySoundRecorded();
 
 		IsRecording = false;
 	}
 
-	public async Task RecordUntilSilenceDetectedAsync()
+	async Task<IAudioSource> StopRecordingAsync() => await audioRecorder.StopAsync();
+
+	public void CheckIfAnySoundRecorded()
 	{
-		cancelDetectSilenceTokenSource = new();
-
-		try
+		if (!audioRecorder.SoundDetected)
 		{
-			if (!audioRecorder.IsRecording)
-			{
-				string tempRecordFilePath = Path.Combine(FileSystem.CacheDirectory, "rec.tmp");
-
-				if (!File.Exists(tempRecordFilePath))
-				{
-					File.Create(tempRecordFilePath).Dispose();
-				}
-
-				await audioRecorder.StartAsync(tempRecordFilePath);
-				await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			return;
-		}
-	}
-
-	void StopRecording() => cancelDetectSilenceTokenSource?.Cancel();
-
-	public async Task<IAudioSource> GetRecordingAsync()
-	{
-		IAudioSource audioSource = await audioRecorder.StopAsync();
-
-		if (audioRecorder.SoundDetected)
-		{
-			return audioSource;
-		}
-		else
-		{
-			return null;
+			Shell.Current.DisplayAlert("No sound detected", "No sound was detected", "Ok");
 		}
 	}
 
