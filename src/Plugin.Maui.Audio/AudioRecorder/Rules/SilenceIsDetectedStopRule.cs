@@ -162,3 +162,8 @@ class SilenceIsDetectedStopRule : IStopRule
 		return sum > 0;
 	}
 }
+
+partial class When
+{
+	public static IStopRule SilenceIsDetected(double thresholdOf, int forDuration) => new SilenceIsDetectedStopRule(thresholdOf, forDuration);
+}

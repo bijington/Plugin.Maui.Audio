@@ -7,3 +7,8 @@ public class ImmediateStopRule : IStopRule
 		return ValueTask.FromResult(true);
 	}
 }
+
+partial class When
+{
+	public static IStopRule Immediately() => new ImmediateStopRule();
+}
