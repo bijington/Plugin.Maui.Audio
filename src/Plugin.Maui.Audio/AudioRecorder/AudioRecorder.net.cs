@@ -18,7 +18,7 @@ partial class AudioRecorder : IAudioRecorder
 
 	public Task StartAsync(string filePath) => Task.CompletedTask;
 
-	public Task<IAudioSource> StopAsync() => Task.FromResult<IAudioSource>(new EmptyAudioSource());
+	public Task<IAudioSource> StopAsync(IStopRule? stopRule = null, CancellationToken cancellationToken = default) => Task.FromResult<IAudioSource>(new EmptyAudioSource());
 
-	byte[]? GetAudioDataChunk() => throw new NotImplementedException();
+	public byte[]? GetAudioDataChunk() => throw new NotImplementedException();
 }

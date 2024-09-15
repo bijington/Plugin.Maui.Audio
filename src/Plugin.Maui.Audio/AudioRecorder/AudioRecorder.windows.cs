@@ -152,12 +152,14 @@ partial class AudioRecorder : IAudioRecorder
 		};
 	}
 
-	public async Task<IAudioSource> StopAsync()
+	public async Task<IAudioSource> StopAsync(IStopRule? stopRule = null, CancellationToken cancellationToken = default)
 	{
 		if (mediaCapture == null)
 		{
 			throw new InvalidOperationException("No recording in progress");
 		}
+		
+		await (stopRule ?? When.Immediately()).EnforceStop(this, cancellationToken);
 
 		await mediaCapture.StopRecordAsync();
 
@@ -219,7 +221,7 @@ partial class AudioRecorder : IAudioRecorder
 		return fileStream;
 	}
 
-	byte[]? GetAudioDataChunk()
+	public byte[]? GetAudioDataChunk()
 	{
 		uint bitRate = sampleRate * bitsPerSample * channelCount;
 		uint bufferSize;

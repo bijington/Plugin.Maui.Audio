@@ -94,8 +94,10 @@ partial class AudioRecorder : IAudioRecorder
 		return new AudioRecord(AudioSource.Mic, sampleRate, channels, encoding, bufferSize);
 	}
 
-	public Task<IAudioSource> StopAsync()
+	public async Task<IAudioSource> StopAsync(IStopRule? stopRule = null, CancellationToken cancellationToken = default)
 	{
+		await (stopRule ?? When.Immediately()).EnforceStop(this, cancellationToken);
+		
 		if (audioRecord?.RecordingState == RecordState.Recording)
 		{
 			audioRecord?.Stop();
@@ -121,7 +123,7 @@ partial class AudioRecorder : IAudioRecorder
 			Trace.TraceWarning("delete raw wav file failed.");
 		}
 
-		return Task.FromResult(GetRecording());
+		return GetRecording();
 	}
 
 	IAudioSource GetRecording()
@@ -289,7 +291,7 @@ partial class AudioRecorder : IAudioRecorder
 		};
 	}
 
-	byte[]? GetAudioDataChunk()
+	public byte[]? GetAudioDataChunk()
 	{
 		audioDataChunk ??= new byte[bufferSize];
 		
