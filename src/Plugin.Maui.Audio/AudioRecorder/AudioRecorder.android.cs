@@ -32,9 +32,10 @@ partial class AudioRecorder : IAudioRecorder
 	}
 
 	public Task StartAsync(AudioRecordingOptions options) => StartAsync(GetTempFilePath(), options);
-	public Task StartAsync() => StartAsync(GetTempFilePath(), DefaultAudioRecordingOptions.DefaultOptions);
-	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
 
+	public Task StartAsync() => StartAsync(GetTempFilePath(), DefaultAudioRecordingOptions.DefaultOptions);
+
+	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
 
 	public Task StartAsync(string filePath, AudioRecordingOptions options)
 	{
@@ -96,31 +97,34 @@ partial class AudioRecorder : IAudioRecorder
 
 	public async Task<IAudioSource> StopAsync(IStopRule? stopRule = null, CancellationToken cancellationToken = default)
 	{
-		await (stopRule ?? When.Immediately()).EnforceStop(this, cancellationToken);
-		
-		if (audioRecord?.RecordingState == RecordState.Recording)
-		{
-			audioRecord?.Stop();
-		}
+		bool isStopRuleFulfilled = await CheckStopRuleAsync(stopRule, cancellationToken);
 
-		if (audioFilePath is null)
+		if (isStopRuleFulfilled)
 		{
-			throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
-		}
-
-		CopyWaveFile(rawFilePath, audioFilePath);
-
-		try
-		{
-			// lets delete the temp file with the raw data, after we have created the WAVE file
-			if (System.IO.File.Exists(rawFilePath))
+			if (audioRecord?.RecordingState == RecordState.Recording)
 			{
-				System.IO.File.Delete(rawFilePath);
+				audioRecord?.Stop();
 			}
-		}
-		catch
-		{
-			Trace.TraceWarning("delete raw wav file failed.");
+
+			if (audioFilePath is null)
+			{
+				throw new InvalidOperationException("'audioFilePath' is null, this really should not happen.");
+			}
+
+			CopyWaveFile(rawFilePath, audioFilePath);
+
+			try
+			{
+				// lets delete the temp file with the raw data, after we have created the WAVE file
+				if (System.IO.File.Exists(rawFilePath))
+				{
+					System.IO.File.Delete(rawFilePath);
+				}
+			}
+			catch
+			{
+				Trace.TraceWarning("delete raw wav file failed.");
+			}
 		}
 
 		return GetRecording();

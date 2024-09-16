@@ -21,56 +21,46 @@ class SilenceIsDetectedStopRule : IStopRule
 	
 	public async ValueTask<bool> EnforceStop(IAudioRecorder recorder, CancellationToken cancellationToken = default)
 	{
-		await DetectSilenceAsync(recorder, cancellationToken);
-		
-		return soundDetected;
+		return await DetectSilenceAsync(recorder, cancellationToken);
 	}
 	
-	async Task DetectSilenceAsync(IAudioRecorder recorder, CancellationToken cancellationToken)
+	async Task<bool> DetectSilenceAsync(IAudioRecorder recorder, CancellationToken cancellationToken)
 	{
 		ArgumentOutOfRangeException.ThrowIfLessThan(silenceThreshold, 1);
 		ArgumentOutOfRangeException.ThrowIfNegative(silenceDuration);
+
+		bool isSilenceDetected = default;
 
 		readingsComplete = false;
 		noiseLevel = 0;
 		firstNoiseDetectedTime = default;
 		lastSoundDetectedTime = default;
 
-		try
+		await Task.Run(() =>
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-			await Task.Run(() =>
+			while (recorder.IsRecording)
 			{
-#if WINDOWS
-				audioFileStream = GetFileStream();
-				audioChunkNumber = 1;
-#endif
-				while (recorder.IsRecording)
+				if (cancellationToken.IsCancellationRequested)
 				{
-					cancellationToken.ThrowIfCancellationRequested();
-					byte[]? audioDataChunk = recorder.GetAudioDataChunk();
+					Debug.WriteLine("Detect silence canceled.");
+					isSilenceDetected = false;
+					break;
+				}
 
-					if (audioDataChunk is byte[] audioData)
+				byte[]? audioDataChunk = recorder.GetAudioDataChunk();
+
+				if (audioDataChunk is byte[] audioData)
+				{
+					if (DetectSilence(audioData))
 					{
-						if (DetectSilence(audioData))
-						{
-							return;
-						}
+						isSilenceDetected = true;
+						break;
 					}
 				}
-			}, cancellationToken);
-		}
-		catch(OperationCanceledException)
-		{
-			Debug.WriteLine("Detect silence canceled.");
-			throw;
-		}
-		finally
-		{
-#if WINDOWS
-			audioFileStream?.Dispose();
-#endif
-		}
+			}
+		}, cancellationToken);
+
+		return isSilenceDetected;
 	}
 
 	bool DetectSilence(byte[] audioData)

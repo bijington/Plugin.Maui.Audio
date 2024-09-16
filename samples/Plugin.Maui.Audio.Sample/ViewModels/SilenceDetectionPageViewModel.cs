@@ -7,8 +7,6 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 	IAudioSource audioSource;
 	AsyncAudioPlayer audioPlayer;
 
-	CancellationTokenSource cancelDetectSilenceTokenSource;
-
 	double silenceTreshold = 2;
 	int silenceDuration = 1000;
 
@@ -80,7 +78,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 		else
 		{
-			StopRecording();
+			audioSource = await audioRecorder.StopAsync(When.Immediately());
 		}
 	}
 
@@ -95,51 +93,30 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		}
 
 		await RecordUntilSilenceDetectedAsync();
-		StopRecording();
-		audioSource = await GetRecordingAsync();
 
 		IsRecording = false;
 	}
 
 	public async Task RecordUntilSilenceDetectedAsync()
 	{
-		cancelDetectSilenceTokenSource = new();
-
-		try
+		if (!audioRecorder.IsRecording)
 		{
-			if (!audioRecorder.IsRecording)
-			{
-				string tempRecordFilePath = Path.Combine(FileSystem.CacheDirectory, "rec.tmp");
+			/* Check issue on Windows with re-using the same file for recording 
 
-				if (!File.Exists(tempRecordFilePath))
-				{
-					File.Create(tempRecordFilePath).Dispose();
-				}
+			//string tempRecordFilePath = Path.Combine(FileSystem.CacheDirectory, "rec.tmp");
 
-				await audioRecorder.StartAsync(tempRecordFilePath);
-				
-				await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, SilenceDuration), cancelDetectSilenceTokenSource.Token);
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			return;
-		}
-	}
+			//if (!File.Exists(tempRecordFilePath))
+			//{
+			//	File.Create(tempRecordFilePath).Dispose();
+			//}
 
-	void StopRecording() => cancelDetectSilenceTokenSource?.Cancel();
+			//await audioRecorder.StartAsync(tempRecordFilePath);
 
-	public async Task<IAudioSource> GetRecordingAsync()
-	{
-		IAudioSource audioSource = await audioRecorder.StopAsync();
+			*/
 
-		if (audioRecorder.SoundDetected)
-		{
-			return audioSource;
-		}
-		else
-		{
-			return null;
+			await audioRecorder.StartAsync();
+
+			audioSource = await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, SilenceDuration));
 		}
 	}
 
