@@ -77,16 +77,19 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new InvalidOperationException("The recorder is not recording, call StartAsync first.");
 		}
-		
-		await (stopRule ?? When.Immediately()).EnforceStop(this, cancellationToken);
 
-		recorder.Stop();
+		bool isStopRuleFulfilled = await CheckStopRuleAsync(stopRule, cancellationToken);
 
-		await finishedRecordingCompletionSource.Task;
+		if (isStopRuleFulfilled)
+		{
+			recorder.Stop();
 
-		recorder.FinishedRecording -= Recorder_FinishedRecording;
+			await finishedRecordingCompletionSource.Task;
 
-		ActiveSessionHelper.FinishSession(audioRecorderOptions);
+			recorder.FinishedRecording -= Recorder_FinishedRecording;
+
+			ActiveSessionHelper.FinishSession(audioRecorderOptions);
+		}
 
 		return new FileAudioSource(destinationFilePath);
 	}

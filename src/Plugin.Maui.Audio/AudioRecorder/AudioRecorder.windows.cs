@@ -29,6 +29,7 @@ partial class AudioRecorder : IAudioRecorder
 	}
 
 	public Task StartAsync() => StartAsync(DefaultAudioRecordingOptions.DefaultOptions);
+
 	public Task StartAsync(string filePath) => StartAsync(filePath, DefaultAudioRecordingOptions.DefaultOptions);
 
 	public async Task StartAsync(AudioRecordingOptions options)
@@ -104,6 +105,8 @@ partial class AudioRecorder : IAudioRecorder
 		}
 
 		audioFilePath = fileOnDisk.Path;
+
+		audioFileStream = GetFileStream();
 	}
 
 	MediaEncodingProfile SharedOptionsToWindowsMediaProfile(AudioRecordingOptions options)
@@ -159,12 +162,17 @@ partial class AudioRecorder : IAudioRecorder
 			throw new InvalidOperationException("No recording in progress");
 		}
 		
-		await (stopRule ?? When.Immediately()).EnforceStop(this, cancellationToken);
+		bool isStopRuleFulfilled = await CheckStopRuleAsync(stopRule, cancellationToken);
 
-		await mediaCapture.StopRecordAsync();
+		if (isStopRuleFulfilled)
+		{
+			await mediaCapture.StopRecordAsync();
 
-		mediaCapture.Dispose();
-		mediaCapture = null;
+			mediaCapture.Dispose();
+			mediaCapture = null;
+
+			audioFileStream?.Dispose();
+		}
 
 		return GetRecording();
 	}
@@ -217,6 +225,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			startingAudioFileStreamLength = wavFileHeaderLength;
 		}
+
+		audioChunkNumber = 1;
 
 		return fileStream;
 	}
