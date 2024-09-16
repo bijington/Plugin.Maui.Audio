@@ -117,7 +117,8 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 				}
 
 				await audioRecorder.StartAsync(tempRecordFilePath);
-				await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
+				
+				await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, SilenceDuration), cancelDetectSilenceTokenSource.Token);
 			}
 		}
 		catch (OperationCanceledException)

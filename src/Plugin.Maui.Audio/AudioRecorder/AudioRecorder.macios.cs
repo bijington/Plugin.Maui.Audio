@@ -69,7 +69,7 @@ partial class AudioRecorder : IAudioRecorder
 		return Task.FromResult(recorder.Record());
 	}
 
-	public async Task<IAudioSource> StopAsync()
+	public async Task<IAudioSource> StopAsync(IStopRule? stopRule = null, CancellationToken cancellationToken = default)
 	{
 		if (recorder is null ||
 			destinationFilePath is null ||
@@ -77,6 +77,8 @@ partial class AudioRecorder : IAudioRecorder
 		{
 			throw new InvalidOperationException("The recorder is not recording, call StartAsync first.");
 		}
+		
+		await (stopRule ?? When.Immediately()).EnforceStop(this, cancellationToken);
 
 		recorder.Stop();
 
@@ -117,5 +119,5 @@ partial class AudioRecorder : IAudioRecorder
 		};
 	}
 
-	byte[]? GetAudioDataChunk() => throw new NotImplementedException();
+	public byte[]? GetAudioDataChunk() => throw new NotImplementedException();
 }

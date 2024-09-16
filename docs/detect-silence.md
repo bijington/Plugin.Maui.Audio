@@ -13,19 +13,19 @@ await audioRecorder.StopAsync();
 `SoundDetected` is true when during actual recording there was a sound detected. It is set to false at start of `DetectSilenceAsync` method. This property can be use to prevent from saving empty recordings.
 
 ```csharp
-	public async Task<IAudioSource> GetRecordingAsync()
-	{
-		IAudioSource audioSource = await audioRecorder.StopAsync();
+public async Task<IAudioSource> GetRecordingAsync()
+{
+    IAudioSource audioSource = await audioRecorder.StopAsync();
 
-		if (audioRecorder.SoundDetected)
-		{
-			return audioSource;
-		}
-		else
-		{
-			return null;
-		}
-	}
+    if (audioRecorder.SoundDetected)
+    {
+        return audioSource;
+    }
+    else
+    {
+        return null;
+    }
+}
 ```
 
 ## Methods
@@ -56,47 +56,47 @@ If there will be available another way to stop recording other than `DetectSilen
 ```csharp
 async Task StartStopRecordToggleAsync()
 {
-	if (!IsRecording)
-	{
-		await RecordAsync();
-	}
-	else
-	{
-		StopRecording();
-	}
+    if (!IsRecording)
+    {
+        await RecordAsync();
+    }
+    else
+    {
+        StopRecording();
+    }
 }
 
 async Task RecordAsync()
 {
-	await RecordUntilSilenceDetectedAsync();
-	StopRecording();
-	audioSource = await GetRecordingAsync();
+    await RecordUntilSilenceDetectedAsync();
+    StopRecording();
+    audioSource = await GetRecordingAsync();
 }
 
 public async Task RecordUntilSilenceDetectedAsync()
 {
-	cancelDetectSilenceTokenSource = new();
+    cancelDetectSilenceTokenSource = new();
 	
-	try
-	{
-		if (!audioRecorder.IsRecording)
-		{
-			await audioRecorder.StartAsync(tempRecordFilePath);
-			await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
-		}
-	}
-	catch (OperationCanceledException)
-	{
-		return;
-	}
+    try
+    {
+        if (!audioRecorder.IsRecording)
+        {
+            await audioRecorder.StartAsync(tempRecordFilePath);
+            await audioRecorder.DetectSilenceAsync(SilenceTreshold, SilenceDuration, cancelDetectSilenceTokenSource.Token);
+        }
+    }
+    catch (OperationCanceledException)
+    {
+        return;
+    }
 }
 
 void StopRecording() => cancelDetectSilenceTokenSource?.Cancel();
 
 public async Task<IAudioSource> GetRecordingAsync()
 {
-	IAudioSource audioSource = await audioRecorder.StopAsync();
+    IAudioSource audioSource = await audioRecorder.StopAsync();
 		
-	...
+    ...
 }
 ```
