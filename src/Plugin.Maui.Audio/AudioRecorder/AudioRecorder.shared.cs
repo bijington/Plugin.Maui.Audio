@@ -4,6 +4,8 @@ partial class AudioRecorder
 {
 	CancellationTokenSource stopCancelTokenSource = new();
 
+	public bool SoundDetected { get; set; }
+
 	async ValueTask<bool> CheckStopRuleAsync(IStopRule? stopRule, CancellationToken cancellationToken)
 	{
 		if (cancellationToken == default)
@@ -21,6 +23,4 @@ partial class AudioRecorder
 
 		return isStopRuleFulfilled;
 	}
-
-	public bool SoundDetected { get; private set; }
 }

@@ -8,7 +8,6 @@ class SilenceIsDetectedStopRule : IStopRule
 	double noiseLevel;
 	DateTime firstNoiseDetectedTime;
 	DateTime lastSoundDetectedTime;
-	bool soundDetected = false;
 
 	readonly double silenceThreshold;
 	readonly TimeSpan silenceDuration;
@@ -43,6 +42,7 @@ class SilenceIsDetectedStopRule : IStopRule
 		noiseLevel = 0;
 		firstNoiseDetectedTime = default;
 		lastSoundDetectedTime = default;
+		recorder.SoundDetected = false;
 
 		await Task.Run(() =>
 		{
@@ -59,7 +59,7 @@ class SilenceIsDetectedStopRule : IStopRule
 
 				if (audioDataChunk is byte[] audioData)
 				{
-					if (DetectSilence(audioData))
+					if (DetectSilence(recorder, audioData))
 					{
 						isSilenceDetected = true;
 						break;
@@ -71,7 +71,7 @@ class SilenceIsDetectedStopRule : IStopRule
 		return isSilenceDetected;
 	}
 
-	bool DetectSilence(byte[] audioData)
+	bool DetectSilence(IAudioRecorder recorder, byte[] audioData)
 	{
 		double minimumNoiseLevel = 0.005;
 
@@ -120,7 +120,7 @@ class SilenceIsDetectedStopRule : IStopRule
 			}
 			else
 			{
-				soundDetected = true;
+				recorder.SoundDetected = true;
 				lastSoundDetectedTime = DateTime.UtcNow;
 				Debug.WriteLine("Sound detected.");
 			}

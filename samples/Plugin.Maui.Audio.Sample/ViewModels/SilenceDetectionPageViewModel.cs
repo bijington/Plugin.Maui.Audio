@@ -79,6 +79,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 		else
 		{
 			audioSource = await audioRecorder.StopAsync(When.Immediately());
+			CheckIfAnySoundRecorded();
 		}
 	}
 
@@ -116,6 +117,17 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 
 			await audioRecorder.StartAsync();
 			audioSource = await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, TimeSpan.FromMilliseconds(SilenceDuration)));
+			CheckIfAnySoundRecorded();
+		}
+	}
+
+	void CheckIfAnySoundRecorded()
+	{
+		if (!audioRecorder.SoundDetected)
+		{
+			Shell.Current.DisplayAlert("Sound of silence", 
+				"No sound was detected. Make sure your mic is on. If the problem still persist, try to adjust silence threshold and checkout the Debug console for more info.", 
+				"Ok");
 		}
 	}
 

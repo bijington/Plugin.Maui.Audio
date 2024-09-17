@@ -18,7 +18,7 @@ public interface IAudioRecorder
 	/// <Summary>
 	/// Gets whether a sound (other than the ambient) was detected. Works only when DetectSilenceAsync fired.
 	/// </Summary>
-	bool SoundDetected { get; }
+	bool SoundDetected { get; set; }
 
 	///<Summary>
 	/// Start recording audio to disk in a randomly generated file.
