@@ -16,7 +16,15 @@ class SilenceIsDetectedStopRule : IStopRule
 	internal SilenceIsDetectedStopRule(double silenceThreshold, TimeSpan silenceDuration)
 	{
 		this.silenceThreshold = silenceThreshold;
-		this.silenceDuration = silenceDuration;
+
+		if (silenceDuration != default)
+		{
+			this.silenceDuration = silenceDuration;
+		}
+		else
+		{
+			this.silenceDuration = TimeSpan.FromSeconds(1);
+		}
 	}
 	
 	public async ValueTask<bool> EnforceStop(IAudioRecorder recorder, CancellationToken cancellationToken = default)
@@ -155,5 +163,5 @@ class SilenceIsDetectedStopRule : IStopRule
 
 partial class When
 {
-	public static IStopRule SilenceIsDetected(double thresholdOf, TimeSpan forDuration) => new SilenceIsDetectedStopRule(thresholdOf, forDuration);
+	public static IStopRule SilenceIsDetected(double thresholdOf = 2, TimeSpan forDuration = default) => new SilenceIsDetectedStopRule(thresholdOf, forDuration);
 }
