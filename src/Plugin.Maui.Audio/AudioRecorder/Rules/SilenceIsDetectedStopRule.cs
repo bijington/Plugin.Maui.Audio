@@ -11,9 +11,9 @@ class SilenceIsDetectedStopRule : IStopRule
 	bool soundDetected = false;
 
 	readonly double silenceThreshold;
-	readonly int silenceDuration;
+	readonly TimeSpan silenceDuration;
 
-	internal SilenceIsDetectedStopRule(double silenceThreshold, int silenceDuration)
+	internal SilenceIsDetectedStopRule(double silenceThreshold, TimeSpan silenceDuration)
 	{
 		this.silenceThreshold = silenceThreshold;
 		this.silenceDuration = silenceDuration;
@@ -27,7 +27,7 @@ class SilenceIsDetectedStopRule : IStopRule
 	async Task<bool> DetectSilenceAsync(IAudioRecorder recorder, CancellationToken cancellationToken)
 	{
 		ArgumentOutOfRangeException.ThrowIfLessThan(silenceThreshold, 1);
-		ArgumentOutOfRangeException.ThrowIfNegative(silenceDuration);
+		ArgumentOutOfRangeException.ThrowIfLessThan(silenceDuration, TimeSpan.FromSeconds(0));
 
 		bool isSilenceDetected = default;
 
@@ -95,14 +95,14 @@ class SilenceIsDetectedStopRule : IStopRule
 			{
 				if (lastSoundDetectedTime != default)
 				{
-					if ((DateTime.UtcNow - lastSoundDetectedTime).TotalMilliseconds >= silenceDuration)
+					if (DateTime.UtcNow - lastSoundDetectedTime >= silenceDuration)
 					{
 						Debug.WriteLine("Silence detected.");
 
 						return true;
 					}
 				}
-				else if ((DateTime.UtcNow - firstNoiseDetectedTime).TotalMilliseconds >= silenceDuration)
+				else if (DateTime.UtcNow - firstNoiseDetectedTime >= silenceDuration)
 				{
 					Debug.WriteLine("No sound detected.");
 
@@ -155,5 +155,5 @@ class SilenceIsDetectedStopRule : IStopRule
 
 partial class When
 {
-	public static IStopRule SilenceIsDetected(double thresholdOf, int forDuration) => new SilenceIsDetectedStopRule(thresholdOf, forDuration);
+	public static IStopRule SilenceIsDetected(double thresholdOf, TimeSpan forDuration) => new SilenceIsDetectedStopRule(thresholdOf, forDuration);
 }

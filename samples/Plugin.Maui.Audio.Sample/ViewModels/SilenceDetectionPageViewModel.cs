@@ -115,8 +115,7 @@ public class SilenceDetectionPageViewModel : BaseViewModel
 			*/
 
 			await audioRecorder.StartAsync();
-
-			audioSource = await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, SilenceDuration));
+			audioSource = await audioRecorder.StopAsync(When.SilenceIsDetected(SilenceTreshold, TimeSpan.FromMilliseconds(SilenceDuration)));
 		}
 	}
 
